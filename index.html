@@ -514,7 +514,19 @@
       text-shadow: none;
     }
 
-        .syslog-line.warning-critical {
+    .syslog-line.warning-secret {
+      color: #ff5252;
+      font-weight: 700;
+      text-shadow: none;
+    }
+
+    .syslog-line.warning-topsecret {
+      color: #ff2e2e;
+      font-weight: 800;
+      text-shadow: 0 0 11px rgba(255, 46, 46, 0.95);
+    }
+
+    .syslog-line.warning-critical {
       color: #ff2e2e;
       font-weight: 800;
       text-shadow: 0 0 11px rgba(255, 46, 46, 0.95);
@@ -1030,11 +1042,11 @@
     ];
 
     const classGroups = [
-      { name: "SAFE", critical: false, members: ["ACP-208", "ACP-914"] },
-      { name: "EUCLID", critical: false, members: ["ACP-173", "ACP-096", "ACP-1919"] },
-      { name: "KETER", critical: false, members: ["ACP-682", "ACP-052"] },
-      { name: "THAUMIEL", critical: true, members: ["ACP-000"] },
-      { name: "APOLLYON", critical: true, members: ["ACP-999", "ACP-001"] }
+      { name: "SAFE", icon: "./icon_safe.png", clearance: "RESTRICTED", logStyle: "", members: ["ACP-208", "ACP-914"] },
+      { name: "EUCLID", icon: "./icon_euclid.png", clearance: "RESTRICTED", logStyle: "", members: ["ACP-173", "ACP-096", "ACP-1919"] },
+      { name: "KETER", icon: "./icon_keter.png", clearance: "SECRET", logStyle: "secret", members: ["ACP-682", "ACP-052"] },
+      { name: "THAUMIEL", icon: "./icon_thaumiel.png", clearance: "TOP SECRET", logStyle: "topsecret", members: ["ACP-000"] },
+      { name: "APOLLYON", icon: "./icon_apollyon.png", clearance: "TOP SECRET", logStyle: "topsecret", members: ["ACP-999", "ACP-001"] }
     ];
     let typeIndex = 0;
     let codename = "";
@@ -1076,6 +1088,10 @@
         line.classList.add("warning-council");
       } else if (options.warningStyle === "plain") {
         line.classList.add("warning-plain");
+      } else if (options.warningStyle === "secret") {
+        line.classList.add("warning-secret");
+      } else if (options.warningStyle === "topsecret") {
+        line.classList.add("warning-topsecret");
       } else if (options.warningStyle === "critical") {
         line.classList.add("warning-critical");
       } else if (options.warning) {
@@ -1224,7 +1240,9 @@
         addLogLine(`[SYSTEM] ACCESSING DATA: ${groupName} / ${person.id} "${person.name}"...`);
       }
       if (person.level >= 5) {
-        addLogLine("[WARNING] HIGH-LEVEL ACCESS DETECTED.", { warningStyle: "council" });
+        addLogLine("[TOP SECRET] HIGH-LEVEL ACCESS DETECTED.", { warningStyle: "topsecret" });
+      } else if (person.level >= 4) {
+        addLogLine("[SECRET] SECURITY CLEARANCE EVENT.", { warningStyle: "secret" });
       }
     }
         function renderRoster() {
@@ -1271,7 +1289,8 @@
         card.className = "group-card";
         card.innerHTML = `
           <div class="group-head">
-            <span>${group.name} CLASS</span>
+            <img class="acp-img group-logo" src="${group.icon}" alt="${group.name} icon" />
+            <span>${group.name} 등급</span>
           </div>
         `;
 
@@ -1281,11 +1300,13 @@
           btn.type = "button";
           btn.innerHTML = `
             <span>${objId}</span>
-            <span class="stamp green">VIEW LOG</span>
+            <span class="stamp ${group.clearance === "RESTRICTED" ? "green" : ""}">${group.clearance}</span>
           `;
           btn.addEventListener("click", () => {
-            addLogLine(`[SYSTEM] OBJECT FILE OPENED: ${group.name} / ${objId}`,
-              group.critical ? { warningStyle: "critical" } : {});
+            addLogLine(
+              `[SYSTEM] OBJECT FILE OPENED: ${group.name} 등급 / ${objId}`,
+              group.logStyle ? { warningStyle: group.logStyle } : {}
+            );
           });
           card.appendChild(btn);
         });

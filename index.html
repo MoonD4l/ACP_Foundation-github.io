@@ -1042,7 +1042,7 @@
     ];
 
     const classGroups = [
-      { name: "SAFE", icon: "./icon_safe.png", clearance: "RESTRICTED", logStyle: "", members: ["ACP-208", "ACP-914"] },
+      { name: "SAFE", icon: "./icon_safe.png", clearance: "RESTRICTED", logStyle: "", members: ["사탕요정"] },
       { name: "EUCLID", icon: "./icon_euclid.png", clearance: "RESTRICTED", logStyle: "", members: ["ACP-173", "ACP-096", "ACP-1919"] },
       { name: "KETER", icon: "./icon_keter.png", clearance: "SECRET", logStyle: "secret", members: ["ACP-682", "ACP-052"] },
       { name: "THAUMIEL", icon: "./icon_thaumiel.png", clearance: "TOP SECRET", logStyle: "topsecret", members: ["ACP-000"] },
@@ -1101,6 +1101,14 @@
       syslogLines.appendChild(line);
       while (syslogLines.children.length > 3) {
         syslogLines.removeChild(syslogLines.firstChild);
+      }
+
+      // For classified reads, tint all 3 visible log lines together.
+      if (options.warningStyle === "secret" || options.warningStyle === "topsecret") {
+        Array.from(syslogLines.children).forEach((el) => {
+          el.classList.remove("warning-secret", "warning-topsecret");
+          el.classList.add(options.warningStyle === "secret" ? "warning-secret" : "warning-topsecret");
+        });
       }
     }
 
@@ -1212,9 +1220,10 @@
       viewerModal.classList.add("show");
     }
 
-        function openProfileModal(person, groupName) {
+    function openProfileModal(person, groupName) {
       const stamp = getStamp(person.level);
       const isCouncil = groupName.includes("O5");
+      const hasProfiles = person.role !== "D계급";
       modalTitle.textContent = `${person.name} / ${person.role}`;
       modalBody.innerHTML = `
         <div class="modal-layout">
@@ -1225,6 +1234,8 @@
             <p>나이: ${person.age}</p>
             <p>MBTI: ${person.mbti}</p>
             <p>담당 직무: ${person.role}</p>
+            ${hasProfiles ? `<p style="margin-top:8px;">[profiles]</p>` : ""}
+            ${hasProfiles ? `<div class="modal-gallery">${buildGalleryHtml(person)}</div>` : `<p style="margin-top:8px;">[profiles 항목 없음]</p>`}
           </div>
           <aside class="modal-side">
             <img class="acp-img" src="./profiles/${person.id}_main.jpg" alt="${person.name} large profile image" onerror="this.alt='profiles/${person.id}_main.jpg';" />
@@ -1232,6 +1243,16 @@
         </div>
       `;
       profileModal.classList.add("show");
+
+      if (hasProfiles) {
+        const thumbs = Array.from(modalBody.querySelectorAll(".thumb-btn"));
+        thumbs.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const idx = Number(btn.getAttribute("data-index"));
+            openViewer(getProfileImages(person), idx, person);
+          });
+        });
+      }
 
       if (isCouncil) {
         addLogLine(`[SYSTEM] ACCESSING DATA: ${groupName} / ${person.id} "${maskName(person.name)}"...`, { warningStyle: "council" });
@@ -1245,7 +1266,8 @@
         addLogLine("[SECRET] SECURITY CLEARANCE EVENT.", { warningStyle: "secret" });
       }
     }
-        function renderRoster() {
+
+    function renderRoster() {
       rosterContainer.innerHTML = "";
       rosterGroups.forEach((group) => {
         const card = document.createElement("article");

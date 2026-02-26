@@ -1424,7 +1424,7 @@
         if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
         addLogLine(`[SYSTEM] NAVIGATING TO ${btn.textContent.replace(/[\[\]]/g, "").trim()}`);
       });
-    });    });
+    });
 
     window.addEventListener("mousemove", (e) => {
       cursorGlow.style.left = `${e.clientX}px`;
@@ -1443,5 +1443,7 @@
 </body>
 
 </html>
+
+
 
 
